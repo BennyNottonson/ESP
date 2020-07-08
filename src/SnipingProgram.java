@@ -84,6 +84,147 @@ public class SnipingProgram implements ActionListener {
         } 
 	}
 	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		
+		long sum = 0;
+
+		for (int i = 0; i < 10; i++) {
+			avgping[i] = getPing("api.mojang.com");
+		}
+
+		for (int i = 0; i < avgping.length; i++) {
+			sum += avgping[i];
+		}
+
+		pinglatency = sum / avgping.length;
+		
+		pl.setText("Ping: " + pinglatency);
+		
+		String username = tf.getText();
+		@SuppressWarnings("deprecation")
+		String password = tf2.getText();
+		String date = tf5.getText();
+		String email = tf4.getText();
+
+		String authToken = "Bearer " + getAuthCode(email, password);
+		String uuid = getUUID(email, password);
+
+		System.out.println(authToken);
+		System.out.println(uuid);
+
+		if (uuid != "" && authToken != "Bearer ") {
+			startSnipe(username, password, uuid, authToken, date);
+		}
+	}
+	
+	public static void setupGUI() {
+		Image icon = null;
+		Image icon2 = null;
+		Image icon3 = null;
+		
+		try {
+			URL url = new URL("https://static.thenounproject.com/png/70816-200.png");
+			icon = ImageIO.read(url);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		try {
+			URL url = new URL("https://cdn2.iconfinder.com/data/icons/font-awesome/1792/code-512.png");
+			icon2 = ImageIO.read(url);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		try {
+			URL url = new URL("https://png.pngtree.com/thumb_back/fw800/back_our/20190619/ourmid/pngtree-european-atmosphere-real-estate-education-detail-page-vector-background-material-image_132239.jpg");
+			icon3 = ImageIO.read(url);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		JFrame f = new JFrame();
+		f.setSize(840, 420);
+		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		f.setTitle("ESP: Een's Sniping Program");
+		f.setIconImage(icon2);
+		f.setResizable(false);
+
+		JPanel p = new JPanel();
+		f.getContentPane().add(p);
+
+		p.setLayout(null);
+		
+		l = new JLabel("Info: Idle...");
+		l.setBounds(10, 20, 420, 25);
+		p.add(l);
+		
+		JLabel cl = new JLabel("𝙀𝙎𝙋: 𝙀𝙚𝙣'𝙨 𝙎𝙣𝙞𝙥𝙞𝙣𝙜 𝙋𝙧𝙤𝙜𝙧𝙖𝙢");
+		cl.setBounds(460, 225, 420, 45);
+		cl.setFont(new Font("Serif", Font.PLAIN, 20));
+		p.add(cl);
+		
+		JLabel cl2 = new JLabel("Copyright © 2020 EenDevCo.");
+		cl2.setBounds(7, 355, 420, 45);
+		p.add(cl2);
+		
+		pl = new JLabel("Ping: " + pinglatency);
+		pl.setBounds(10, 40, 420, 25);
+		p.add(pl);
+
+		JLabel l2 = new JLabel("Wanted Username:");
+		l2.setBounds(10, 80, 160, 25);
+		p.add(l2);
+
+		tf = new JTextField(10);
+		tf.setBounds(125, 80, 165, 25);
+		p.add(tf);
+
+		JLabel l3 = new JLabel("Account Password:");
+		l3.setBounds(10, 140, 160, 25);
+		p.add(l3);
+
+		tf2 = new JPasswordField(10);
+		tf2.setBounds(125, 140, 165, 25);
+		p.add(tf2);
+
+		JLabel l5 = new JLabel("Account Email:");
+		l5.setBounds(10, 110, 160, 25);
+		p.add(l5);
+
+		tf4 = new JTextField(10);
+		tf4.setBounds(125, 110, 165, 25);
+		p.add(tf4);
+
+		JLabel l6 = new JLabel("Date (24 hr) (08/25/2020 09:46:41):");
+		l6.setBounds(10, 200, 225, 25);
+		p.add(l6);
+
+		tf5 = new JTextField(10);
+		tf5.setBounds(215, 200, 165, 25);
+		p.add(tf5);
+
+		JButton b = new JButton("Start");
+		b.setBounds(10, 270, 280, 25);
+		p.add(b);
+		
+		JLabel p1 = new JLabel(new ImageIcon(icon));
+		p1.setBounds(335, -105, 512, 512);
+		p.add(p1);
+		
+		JLabel p2 = new JLabel(new ImageIcon(icon3));
+		p2.setBounds(0, 0, 840, 420);
+		p.add(p2);
+		
+		b.addActionListener(new SnipingProgram());
+
+		f.setVisible(true);
+	}
+	
 	public static void startSnipe(String u, String p, String u2, String at, String d) {
 		// sets up date and times
 		
@@ -179,134 +320,6 @@ public class SnipingProgram implements ActionListener {
 			l.setText("Info: Request faied.");
 			e.printStackTrace();
 		}
-	}
-
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		
-		long sum = 0;
-
-		for (int i = 0; i < 10; i++) {
-			avgping[i] = getPing("api.mojang.com");
-		}
-
-		for (int i = 0; i < avgping.length; i++) {
-			sum += avgping[i];
-		}
-
-		pinglatency = sum / avgping.length;
-		
-		pl.setText("Ping: " + pinglatency);
-		
-		String username = tf.getText();
-		@SuppressWarnings("deprecation")
-		String password = tf2.getText();
-		String date = tf5.getText();
-		String email = tf4.getText();
-
-		String authToken = "Bearer " + getAuthCode(email, password);
-		String uuid = getUUID(email, password);
-
-		System.out.println(authToken);
-		System.out.println(uuid);
-
-		//if (uuid != "" && authToken != "Bearer ") {
-			startSnipe(username, password, uuid, authToken, date);
-		//}
-	}
-	
-	public static void setupGUI() {
-		Image icon = null;
-		Image icon2 = null;
-		
-		try {
-			URL url = new URL("https://static.thenounproject.com/png/70816-200.png");
-			icon = ImageIO.read(url);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		try {
-			URL url = new URL("https://cdn2.iconfinder.com/data/icons/font-awesome/1792/code-512.png");
-			icon2 = ImageIO.read(url);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		JFrame f = new JFrame();
-		f.setSize(840, 420);
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		f.setTitle("ESP: Een's Sniping Program");
-		f.setIconImage(icon2);
-		f.setResizable(false);
-
-		JPanel p = new JPanel();
-		f.getContentPane().add(p);
-
-		p.setLayout(null);
-		
-		l = new JLabel("Info: Idle...");
-		l.setBounds(10, 20, 420, 25);
-		p.add(l);
-		
-		JLabel cl = new JLabel("𝙀𝙎𝙋: 𝙀𝙚𝙣'𝙨 𝙎𝙣𝙞𝙥𝙞𝙣𝙜 𝙋𝙧𝙤𝙜𝙧𝙖𝙢");
-		cl.setBounds(460, 225, 420, 45);
-		cl.setFont(new Font("Serif", Font.PLAIN, 20));
-		p.add(cl);
-		
-		JLabel cl2 = new JLabel("Copyright © 2020 EenDevCo.");
-		cl2.setBounds(7, 355, 420, 45);
-		p.add(cl2);
-		
-		pl = new JLabel("Ping: " + pinglatency);
-		pl.setBounds(10, 40, 420, 25);
-		p.add(pl);
-
-		JLabel l2 = new JLabel("Wanted Username:");
-		l2.setBounds(10, 80, 160, 25);
-		p.add(l2);
-
-		tf = new JTextField(10);
-		tf.setBounds(125, 80, 165, 25);
-		p.add(tf);
-
-		JLabel l3 = new JLabel("Account Password:");
-		l3.setBounds(10, 140, 160, 25);
-		p.add(l3);
-
-		tf2 = new JPasswordField(10);
-		tf2.setBounds(125, 140, 165, 25);
-		p.add(tf2);
-
-		JLabel l5 = new JLabel("Account Email:");
-		l5.setBounds(10, 110, 160, 25);
-		p.add(l5);
-
-		tf4 = new JTextField(10);
-		tf4.setBounds(125, 110, 165, 25);
-		p.add(tf4);
-
-		JLabel l6 = new JLabel("Date (24 hr) (08/25/2020 09:46:41):");
-		l6.setBounds(10, 200, 225, 25);
-		p.add(l6);
-
-		tf5 = new JTextField(10);
-		tf5.setBounds(215, 200, 165, 25);
-		p.add(tf5);
-
-		JButton b = new JButton("Start");
-		b.setBounds(10, 270, 280, 25);
-		p.add(b);
-		
-		JLabel p1 = new JLabel(new ImageIcon(icon));
-		p1.setBounds(335, -105, 512, 512);
-		p.add(p1);
-		
-		b.addActionListener(new SnipingProgram());
-
-		f.setVisible(true);
 	}
 
 	static long getPing(String hostAddress) {
