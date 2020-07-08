@@ -1,17 +1,21 @@
+import java.awt.Font;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -35,57 +39,108 @@ public class SnipingProgram implements ActionListener {
 	static JLabel l;
 	static JLabel pl;
 	static JTextField tf5;
-	static JTextField tf6;
+	
+	static String systemipaddress = ""; 
 
 	static long pinglatency;
 
 	static long[] avgping = new long[10];
 
 	public static void main(String[] args) {
+		
+        try
+        { 
+            URL url_name = new URL("http://bot.whatismyipaddress.com"); 
+  
+            BufferedReader sc = 
+            new BufferedReader(new InputStreamReader(url_name.openStream())); 
+  
+            // reads system IPAddress 
+            systemipaddress = sc.readLine().trim(); 
+            
+            System.out.println(systemipaddress);            
+            
+            long sum = 0;
 
-		long sum = 0;
+    		for (int i = 0; i < 10; i++) {
+    			avgping[i] = getPing("api.mojang.com");
+    		}
 
-		for (int i = 0; i < 10; i++) {
-			avgping[i] = getPing("api.mojang.com");
-		}
+    		for (int i = 0; i < avgping.length; i++) {
+    			sum += avgping[i];
+    		}
 
-		for (int i = 0; i < avgping.length; i++) {
-			sum += avgping[i];
-		}
+    		pinglatency = sum / avgping.length;
 
-		pinglatency = sum / avgping.length;
+    		System.out.println(pinglatency);
 
-		System.out.println(pinglatency);
-
-		JOptionPane.showMessageDialog(null, "Please get your time delay from time.is.", "Get Delay From time.is",
-				JOptionPane.WARNING_MESSAGE);
-
-		setupGUI();
-
+    		setupGUI();
+        } 
+        catch (Exception e) 
+        { 
+        	System.out.println(e);
+        	JOptionPane.showMessageDialog(null, "Couldn't get public ip address!", "Please connect to wifi.",
+					JOptionPane.ERROR_MESSAGE);
+        } 
 	}
 	
 	public static void startSnipe(String u, String p, String u2, String at, String d) {
 		// sets up date and times
 		
 		try {
-			DateTimeFormatter format = DateTimeFormatter.ofPattern("dd:MM:yyyy/HH:mm:ss:SSSS");
+			
+			String response = Unirest.get("http://worldtimeapi.org/api/ip/"+systemipaddress+".json").asJson().getBody().getObject().getString("datetime");
+			
+			DateTimeFormatter format = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm:ss:SSSS");
 			String s = d + ":0000";
 			LocalDateTime dt = LocalDateTime.parse(s, format);
 			LocalDateTime dtt = dt.minus(pinglatency, ChronoField.MILLI_OF_DAY.getBaseUnit());
-			LocalDateTime dttt = dtt.minus(Long.parseLong(tf6.getText()), ChronoField.MILLI_OF_DAY.getBaseUnit());
-			String s2 = LocalDateTime.now().format(format);
-			LocalDateTime dt2 = LocalDateTime.parse(s2, format);
-
-			System.out.println(dttt);
 			
-			JOptionPane.showMessageDialog(null, "Starting snipe...", "Currently sniping: " + tf.getText(),
-					JOptionPane.INFORMATION_MESSAGE);
+			LocalDateTime dt2 = LocalDateTime.now();
+			
+			LocalDateTime fromDateTime = LocalDateTime.now();
+			LocalDateTime toDateTime = LocalDateTime.parse(response.substring(0, 24));
 
-			if (dttt.isAfter(dt2)) {
-				while (dt.isAfter(dt2)) {
+			LocalDateTime tempDateTime = LocalDateTime.from( fromDateTime );
 
-					s2 = LocalDateTime.now().format(format);
-					dt2 = LocalDateTime.parse(s2, format);
+			long years = tempDateTime.until( toDateTime, ChronoUnit.YEARS );
+			tempDateTime = tempDateTime.plusYears( years );
+
+			long months = tempDateTime.until( toDateTime, ChronoUnit.MONTHS );
+			tempDateTime = tempDateTime.plusMonths( months );
+
+			long days = tempDateTime.until( toDateTime, ChronoUnit.DAYS );
+			tempDateTime = tempDateTime.plusDays( days );
+
+
+			long hours = tempDateTime.until( toDateTime, ChronoUnit.HOURS );
+			tempDateTime = tempDateTime.plusHours( hours );
+
+			long minutes = tempDateTime.until( toDateTime, ChronoUnit.MINUTES );
+			tempDateTime = tempDateTime.plusMinutes( minutes );
+
+			long seconds = tempDateTime.until( toDateTime, ChronoUnit.SECONDS );
+			tempDateTime = tempDateTime.plusSeconds(seconds);
+			
+			long milliseconds = tempDateTime.until(toDateTime, ChronoUnit.MILLIS);
+			
+			dtt = dtt.minus(years, ChronoUnit.YEARS);
+			dtt = dtt.minus(months, ChronoUnit.MONTHS);
+			dtt = dtt.minus(days, ChronoUnit.DAYS);
+			dtt = dtt.minus(hours, ChronoUnit.HOURS);
+			dtt = dtt.minus(minutes, ChronoUnit.MINUTES);
+			dtt = dtt.minus(seconds, ChronoUnit.SECONDS);
+			dtt = dtt.minus(milliseconds, ChronoUnit.MILLIS);
+			
+			System.out.println(dtt);
+
+			if (dtt.isAfter(dt2)) {
+				
+				JOptionPane.showMessageDialog(null, "Starting snipe...", "Currently sniping: " + tf.getText(),
+						JOptionPane.INFORMATION_MESSAGE);
+				while (dtt.isAfter(dt2)) {
+
+					dt2 = LocalDateTime.now();
 				
 				}
 
@@ -102,10 +157,12 @@ public class SnipingProgram implements ActionListener {
 				JOptionPane.showMessageDialog(null, "That time has passed", "Error: Time has passed.",
 						JOptionPane.ERROR_MESSAGE);
 			}
-		} catch (DateTimeException | NumberFormatException e1) {
-			l.setText("Info: Invaild Date or time delay");
-			JOptionPane.showMessageDialog(null, "That time/delay is Invaild", "Error: Time is Invaild.",
+		} catch (Exception e1) {
+			l.setText("Info: Invaild Date or network unreacable");
+			JOptionPane.showMessageDialog(null, "That time is Invaild. Please check to see if you're connected to the internet!", "Error: Time is Invaild.",
 					JOptionPane.ERROR_MESSAGE);
+			
+			System.out.println(e1);
 		}
 	}
 
@@ -153,16 +210,26 @@ public class SnipingProgram implements ActionListener {
 		System.out.println(authToken);
 		System.out.println(uuid);
 
-		if (uuid != "" && authToken != "Bearer ") {
+		//if (uuid != "" && authToken != "Bearer ") {
 			startSnipe(username, password, uuid, authToken, date);
-		}
+		//}
 	}
 	
 	public static void setupGUI() {
 		Image icon = null;
+		Image icon2 = null;
+		
+		try {
+			URL url = new URL("https://static.thenounproject.com/png/70816-200.png");
+			icon = ImageIO.read(url);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		try {
 			URL url = new URL("https://cdn2.iconfinder.com/data/icons/font-awesome/1792/code-512.png");
-			icon = ImageIO.read(url);
+			icon2 = ImageIO.read(url);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -172,16 +239,26 @@ public class SnipingProgram implements ActionListener {
 		f.setSize(840, 420);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setTitle("ESP: Een's Sniping Program");
-		f.setIconImage(icon);
+		f.setIconImage(icon2);
+		f.setResizable(false);
 
 		JPanel p = new JPanel();
-		f.add(p);
+		f.getContentPane().add(p);
 
 		p.setLayout(null);
 		
 		l = new JLabel("Info: Idle...");
 		l.setBounds(10, 20, 420, 25);
 		p.add(l);
+		
+		JLabel cl = new JLabel("𝙀𝙎𝙋: 𝙀𝙚𝙣'𝙨 𝙎𝙣𝙞𝙥𝙞𝙣𝙜 𝙋𝙧𝙤𝙜𝙧𝙖𝙢");
+		cl.setBounds(460, 225, 420, 45);
+		cl.setFont(new Font("Serif", Font.PLAIN, 20));
+		p.add(cl);
+		
+		JLabel cl2 = new JLabel("Copyright © 2020 EenDevCo.");
+		cl2.setBounds(7, 355, 420, 45);
+		p.add(cl2);
 		
 		pl = new JLabel("Ping: " + pinglatency);
 		pl.setBounds(10, 40, 420, 25);
@@ -211,26 +288,22 @@ public class SnipingProgram implements ActionListener {
 		tf4.setBounds(125, 110, 165, 25);
 		p.add(tf4);
 
-		JLabel l6 = new JLabel("Date (24 hr) (dd:MM:yyyy/hh:mm:ss):");
+		JLabel l6 = new JLabel("Date (24 hr) (08/25/2020 09:46:41):");
 		l6.setBounds(10, 200, 225, 25);
 		p.add(l6);
 
 		tf5 = new JTextField(10);
-		tf5.setBounds(225, 200, 165, 25);
+		tf5.setBounds(215, 200, 165, 25);
 		p.add(tf5);
-
-		JLabel l7 = new JLabel("Time delay (in milliseconds, negative if behind): ");
-		l7.setBounds(10, 230, 300, 25);
-		p.add(l7);
-
-		tf6 = new JTextField(10);
-		tf6.setBounds(280, 230, 165, 25);
-		p.add(tf6);
 
 		JButton b = new JButton("Start");
 		b.setBounds(10, 270, 280, 25);
 		p.add(b);
-
+		
+		JLabel p1 = new JLabel(new ImageIcon(icon));
+		p1.setBounds(335, -105, 512, 512);
+		p.add(p1);
+		
 		b.addActionListener(new SnipingProgram());
 
 		f.setVisible(true);
