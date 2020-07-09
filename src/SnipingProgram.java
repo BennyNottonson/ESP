@@ -39,6 +39,7 @@ public class SnipingProgram implements ActionListener {
 	static JLabel l;
 	static JLabel pl;
 	static JTextField tf5;
+	static JTextField tf7;
 	
 	static String systemipaddress = ""; 
 
@@ -107,13 +108,13 @@ public class SnipingProgram implements ActionListener {
 		String date = tf5.getText();
 		String email = tf4.getText();
 
-		String authToken = "Bearer " + getAuthCode(email, password);
+		String authToken = tf7.getText();
 		String uuid = getUUID(email, password);
 
 		System.out.println(authToken);
 		System.out.println(uuid);
 
-		if (uuid != "" && authToken != "Bearer ") {
+		if (uuid != "" && authToken != "") {
 			startSnipe(username, password, uuid, authToken, date);
 		}
 	}
@@ -191,6 +192,14 @@ public class SnipingProgram implements ActionListener {
 		tf2 = new JPasswordField(10);
 		tf2.setBounds(125, 140, 165, 25);
 		p.add(tf2);
+		
+		JLabel l7 = new JLabel("Auth Token:");
+		l7.setBounds(10, 170, 160, 25);
+		p.add(l7);
+
+		tf7 = new JTextField(10);
+		tf7.setBounds(85, 170, 165, 25);
+		p.add(tf7);
 
 		JLabel l5 = new JLabel("Account Email:");
 		l5.setBounds(10, 110, 160, 25);
@@ -286,13 +295,12 @@ public class SnipingProgram implements ActionListener {
 				
 				}
 
-				l.setText("Info: Attempting Snipe...");
-				JOptionPane.showMessageDialog(null, "Sending POST request to Mojang API...", "Making POST Request...",
-						JOptionPane.INFORMATION_MESSAGE);
-
 				for (int i = 0; i < 20; i++) {
 					MakeJSONRequest(u, p, u2, at);
 				}
+				
+				JOptionPane.showMessageDialog(null, "Sending POST request to Mojang API...", "Making POST Request...",
+						JOptionPane.INFORMATION_MESSAGE);
 			} else {
 				l.setText("Info: That time has already passed");
 				
@@ -358,12 +366,11 @@ public class SnipingProgram implements ActionListener {
 
 		try {
 			HttpResponse<JsonNode> response = Unirest.post("https://authserver.mojang.com/authenticate")
-					.header("content-type", "application/json")
-					.body("{\n    \"username\": \"" + e + "\",     \n                        \n    \"password\": \"" + p
-							+ "\",\n     \n    \"requestUser\": true               \n}")
-					.asJson();
+					  .header("content-type", "application/json")
+					  .body("{\n \"agent\": {                              \n        \"name\": \"Minecraft\",                \n        \"version\": 1                     \n    },\n\t\"username\": \""+e+"\",     \n                        \n    \"password\": \""+p+"\",\n     \n    \"requestUser\": true               \n}")
+					  .asJson();
 
-			uuid = response.getBody().getObject().getJSONObject("user").getString("id");
+			uuid = response.getBody().getObject().getJSONObject("selectedProfile").getString("id");
 		} catch (UnirestException | JSONException e1) {
 			l.setText("Info: Invaild email or password");
 			JOptionPane.showMessageDialog(null, "Password or Email is invaild.", "Error: Invaild Email + Password.",
@@ -371,23 +378,5 @@ public class SnipingProgram implements ActionListener {
 		}
 
 		return uuid;
-	}
-
-	public static String getAuthCode(String email, String password) {
-		String authToken = "";
-
-		try {
-
-			HttpResponse<JsonNode> response = Unirest.post("https://authserver.mojang.com/authenticate")
-					.header("content-type", "application/json")
-					.body("{\n    \"username\": \"" + email + "\",     \n                        \n    \"password\": \""
-							+ password + "\",\n     \n    \"requestUser\": true               \n}")
-					.asJson();
-			authToken = response.getBody().getObject().getString("accessToken");
-		} catch (JSONException | UnirestException e) {
-			l.setText("Info: Invaild email or password");
-		}
-
-		return authToken;
 	}
 }
