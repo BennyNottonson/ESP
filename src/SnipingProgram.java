@@ -148,7 +148,7 @@ public class SnipingProgram implements ActionListener {
 		}
 		
 		JFrame f = new JFrame();
-		f.setSize(840, 420);
+		f.setSize(840, 430);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setTitle("ESP: Een's Sniping Program");
 		f.setIconImage(icon2);
@@ -217,7 +217,7 @@ public class SnipingProgram implements ActionListener {
 		p.add(p1);
 		
 		JLabel p2 = new JLabel(new ImageIcon(icon3));
-		p2.setBounds(0, 0, 840, 420);
+		p2.setBounds(0, -20, 840, 420);
 		p.add(p2);
 		
 		b.addActionListener(new SnipingProgram());
@@ -282,6 +282,7 @@ public class SnipingProgram implements ActionListener {
 				while (dtt.isAfter(dt2)) {
 
 					dt2 = LocalDateTime.now();
+					System.out.println(dt2);
 				
 				}
 
