@@ -110,6 +110,18 @@ public class SnipingProgram implements ActionListener {
 
 		String authToken = tf7.getText();
 		String uuid = getUUID(email, password);
+		
+		if(authToken.length() < 8) {
+			JOptionPane.showMessageDialog(null, "Auth Token Invaild!", "Error: Invaild Auth Token.",
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		
+		if(checkAuthToken(authToken.substring(7)) == false) {
+			JOptionPane.showMessageDialog(null, "Auth Token Invaild!", "Error: Invaild Auth Token.",
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 
 		System.out.println(authToken);
 		System.out.println(uuid);
@@ -237,6 +249,13 @@ public class SnipingProgram implements ActionListener {
 	public static void startSnipe(String u, String p, String u2, String at, String d) {
 		// sets up date and times
 		
+		l.setText("Info: Starting Snipe...");
+		
+		int option = JOptionPane.showConfirmDialog(null, "Are you sure you want to start the sniping process? "
+				+ "\n" + "You can't close the program via the X button, only through Task Manager.", "Snipe confirmation", JOptionPane.OK_CANCEL_OPTION);
+		
+		if(option != JOptionPane.OK_OPTION) return;
+		
 		try {
 			
 			String response = Unirest.get("http://worldtimeapi.org/api/ip/"+systemipaddress+".json").asJson().getBody().getObject().getString("datetime");
@@ -286,8 +305,6 @@ public class SnipingProgram implements ActionListener {
 
 			if (dtt.isAfter(dt2)) {
 				
-				JOptionPane.showMessageDialog(null, "Starting snipe...", "Currently sniping: " + tf.getText(),
-						JOptionPane.INFORMATION_MESSAGE);
 				while (dtt.isAfter(dt2)) {
 
 					dt2 = LocalDateTime.now();
@@ -295,12 +312,8 @@ public class SnipingProgram implements ActionListener {
 				
 				}
 
-				for (int i = 0; i < 20; i++) {
-					MakeJSONRequest(u, p, u2, at);
-				}
+				MakeJSONRequest(u, p, u2, at);
 				
-				JOptionPane.showMessageDialog(null, "Sending POST request to Mojang API...", "Making POST Request...",
-						JOptionPane.INFORMATION_MESSAGE);
 			} else {
 				l.setText("Info: That time has already passed");
 				
@@ -309,7 +322,7 @@ public class SnipingProgram implements ActionListener {
 			}
 		} catch (Exception e1) {
 			l.setText("Info: Invaild Date or network unreacable");
-			JOptionPane.showMessageDialog(null, "That time is Invaild. Please check to see if you're connected to the internet!", "Error: Time is Invaild.",
+			JOptionPane.showMessageDialog(null, "That time is Invaild. Please check to see if you're connected to the internet!" + "\n" + "Remember, every place needs 2 digits (exculding yeer) so 7 becomes 07.", "Error: Time is Invaild.",
 					JOptionPane.ERROR_MESSAGE);
 			
 			System.out.println(e1);
@@ -319,12 +332,37 @@ public class SnipingProgram implements ActionListener {
 	public static void MakeJSONRequest(String username, String password, String uuid, String authToken) {
 		l.setText("Info: Making request...");
 		
+		int count = 0;
+		
 		try {
-			@SuppressWarnings("unused")
-			HttpResponse<String> response = Unirest.post("https://api.mojang.com/user/profile/" + uuid + "/name")
-					.header("content-type", "application/json").header("authorization", "" + authToken + "")
-					.body("{\"name\":\"" + username + "\",\"password\":\"" + password + "\"}").asString();
-			l.setText("Info: Request successful.");
+			
+			for (int i = 0; i < 20; i++) {
+				HttpResponse<String> response = Unirest.post("https://api.mojang.com/user/profile/" + uuid + "/name")
+						.header("content-type", "application/json").header("authorization", "" + authToken + "")
+						.body("{\"name\":\"" + username + "\",\"password\":\"" + password + "\"}").asString();
+				
+				if(response == null) {
+					l.setText("Info: Request successful.");
+					System.out.println("Request sent!");
+				} else {
+					count++;
+				}
+			}
+			
+			if(count > 0 && count < 20) {
+				JOptionPane.showMessageDialog(null, "Mojang API denied "+count+" requests.", "Error: Mojang prevented requests...",
+						JOptionPane.WARNING_MESSAGE);
+				l.setText("Info: "+count+" requests failed.");
+			} else if(count == 0) {
+				JOptionPane.showMessageDialog(null, "Mojang API accepted all requests.", "Success: All request sent",
+						JOptionPane.INFORMATION_MESSAGE);
+				l.setText("Info: All requests succeed.");
+			} else if (count == 20) {
+				JOptionPane.showMessageDialog(null, "Mojang API denied all requests, snipe failed", "Error: Mojang prevented requests...",
+						JOptionPane.ERROR_MESSAGE);
+				l.setText("Info: Snipe failed.");
+			}
+			
 		} catch (UnirestException e) {
 			l.setText("Info: Request faied.");
 			e.printStackTrace();
@@ -378,5 +416,24 @@ public class SnipingProgram implements ActionListener {
 		}
 
 		return uuid;
+	}
+	
+	public static boolean checkAuthToken(String at) {
+		
+		HttpResponse<JsonNode> response = null;
+		try {
+			response = Unirest.post("https://authserver.mojang.com/validate")
+					  .header("content-type", "application/json")
+					  .body("{\n    \"accessToken\": \""+at+"\"\n}")
+					  .asJson();
+			
+			if(response.getBody() == null) {
+				return true;
+			} else {
+				return false;
+			}
+		} catch (Exception e) {
+			return false;
+		}
 	}
 }
