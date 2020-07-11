@@ -40,7 +40,6 @@ public class SnipingProgram implements ActionListener {
 	static JLabel pl;
 	static JTextField tf5;
 	static JTextField tf7;
-	
 	static String systemipaddress = ""; 
 
 	static long pinglatency;
@@ -332,14 +331,16 @@ public class SnipingProgram implements ActionListener {
 	public static void MakeJSONRequest(String username, String password, String uuid, String authToken) {
 		l.setText("Info: Making request...");
 		
+		HttpResponse<JsonNode> response = null;
+		
 		int count = 0;
 		
 		try {
 			
 			for (int i = 0; i < 20; i++) {
-				HttpResponse<String> response = Unirest.post("https://api.mojang.com/user/profile/" + uuid + "/name")
+				response = Unirest.post("https://api.mojang.com/user/profile/" + uuid + "/name")
 						.header("content-type", "application/json").header("authorization", "" + authToken + "")
-						.body("{\"name\":\"" + username + "\",\"password\":\"" + password + "\"}").asString();
+						.body("{\"name\":\"" + username + "\",\"password\":\"" + password + "\"}").asJson();
 				
 				if(response == null) {
 					l.setText("Info: Request successful.");
@@ -349,8 +350,10 @@ public class SnipingProgram implements ActionListener {
 				}
 			}
 			
+			
+				
 			if(count > 0 && count < 20) {
-				JOptionPane.showMessageDialog(null, "Mojang API denied "+count+" requests.", "Error: Mojang prevented requests...",
+				JOptionPane.showMessageDialog(null, "Mojang API denied "+count+" requests." + "\n" + response.getBody().getObject().getString("errorMessage"), "Error: Mojang prevented requests...",
 						JOptionPane.WARNING_MESSAGE);
 				l.setText("Info: "+count+" requests failed.");
 			} else if(count == 0) {
@@ -358,7 +361,7 @@ public class SnipingProgram implements ActionListener {
 						JOptionPane.INFORMATION_MESSAGE);
 				l.setText("Info: All requests succeed.");
 			} else if (count == 20) {
-				JOptionPane.showMessageDialog(null, "Mojang API denied all requests, snipe failed", "Error: Mojang prevented requests...",
+				JOptionPane.showMessageDialog(null, "Mojang API denied all requests, snipe failed" + "\n" + response.getBody().getObject().getString("errorMessage"), "Error: Mojang prevented requests...",
 						JOptionPane.ERROR_MESSAGE);
 				l.setText("Info: Snipe failed.");
 			}
@@ -398,7 +401,7 @@ public class SnipingProgram implements ActionListener {
 		return -1; // to indicate failure
 
 	}
-
+	
 	public static String getUUID(String e, String p) {
 		String uuid = "";
 
