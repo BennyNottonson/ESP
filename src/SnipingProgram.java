@@ -220,12 +220,12 @@ public class SnipingProgram implements ActionListener {
 		tf4.setBounds(125, 110, 165, 25);
 		p.add(tf4);
 
-		JLabel l6 = new JLabel("Date (24 hr) (08/25/2020 09:46:41):");
+		JLabel l6 = new JLabel("Drop Date (24 hr) (08/25/2020 09:46:41):");
 		l6.setBounds(10, 200, 225, 25);
 		p.add(l6);
 
 		tf5 = new JTextField(10);
-		tf5.setBounds(215, 200, 165, 25);
+		tf5.setBounds(243, 200, 165, 25);
 		p.add(tf5);
 
 		JButton b = new JButton("Start");
@@ -304,7 +304,11 @@ public class SnipingProgram implements ActionListener {
 
 			if (dtt.isAfter(dt2)) {
 				
-				while (dtt.isAfter(dt2)) {
+				while (!dtt.isEqual(dt2)) {
+					
+					if(dt2.isAfter(dtt)) {
+						break;
+					}
 
 					dt2 = LocalDateTime.now();
 					System.out.println(dt2);
@@ -353,7 +357,7 @@ public class SnipingProgram implements ActionListener {
 			
 				
 			if(count > 0 && count < 20) {
-				JOptionPane.showMessageDialog(null, "Mojang API denied "+count+" requests." + "\n" + response.getBody().getObject().getString("errorMessage"), "Error: Mojang prevented requests...",
+				JOptionPane.showMessageDialog(null, "Mojang API accepted "+ (20 - count) +" requests." + "\n" + response.getBody().getObject().getString("errorMessage"), "Error: Mojang prevented requests...",
 						JOptionPane.WARNING_MESSAGE);
 				l.setText("Info: "+count+" requests failed.");
 			} else if(count == 0) {
